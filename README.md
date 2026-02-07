@@ -17,6 +17,7 @@ Reset schedule (example starting Feb 7):
 |---------|-----|
 | **macOS** | Native `osascript` notification with sound |
 | **iPhone** | Push via [ntfy.sh](https://ntfy.sh) — install the ntfy app and subscribe to the topic |
+| **Cloud** | GitHub Actions cron — sends ntfy notifications even when your Mac is off |
 
 ## Setup
 
@@ -53,6 +54,12 @@ launchctl list | grep limit-notif
 cat ~/Library/Logs/limit-notif-scheduler.log
 ```
 
+### 5. Cloud Notifications (optional)
+
+The GitHub Actions workflow (`.github/workflows/notify.yml`) runs every hour and sends ntfy notifications even when your Mac is off. It activates automatically once the repo is pushed to GitHub.
+
+To test it manually: go to the repo **Actions** tab → **Claude Limit Reset Notifier** → **Run workflow**.
+
 ## Uninstall
 
 ```bash
@@ -67,6 +74,8 @@ cat ~/Library/Logs/limit-notif-scheduler.log
 | `com.revinobakmaldi.limit-notif-scheduler.plist` | launchd service definition |
 | `install.sh` | One-command install |
 | `uninstall.sh` | One-command uninstall |
+| `cloud_notify.py` | GitHub Actions script — sends ntfy when Mac is off |
+| `.github/workflows/notify.yml` | Hourly cron workflow |
 
 ## Requirements
 

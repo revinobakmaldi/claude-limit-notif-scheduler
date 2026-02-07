@@ -1,0 +1,17 @@
+name: Claude Limit Reset Notifier
+
+on:
+  schedule:
+    - cron: '55 * * * *' # Run at minute 55 of every hour
+  workflow_dispatch: # Allow manual trigger for testing
+
+env:
+  TZ: Asia/Jakarta
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check and notify
+        run: python3 cloud_notify.py
