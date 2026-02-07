@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.revinobakmaldi.limit-notif-scheduler</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/revinobakmaldi/ai-lab/products/claude-limit-notif-scheduler/scheduler.py</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/revinobakmaldi/Library/Logs/limit-notif-scheduler.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/revinobakmaldi/Library/Logs/limit-notif-scheduler.err</string>
+</dict>
+</plist>
