@@ -72,7 +72,7 @@ def main():
     # Heads-up notification
     send_notification(
         "Claude Limit Resets Soon",
-        f"Your Claude limit resets in 1 minute (at {reset_time.strftime('%-I:%M %p')})",
+        f"Your limit resets in 1 minute (at {reset_time.strftime('%-I:%M %p')}). Get ready to build something great!",
     )
 
     # Sleep the remaining minute
@@ -83,7 +83,7 @@ def main():
     # Reset notification
     send_notification(
         "Claude Limit Reset!",
-        f"Your Claude limit has been reset. Started at {start_time.strftime('%-I:%M %p')}, reset at {reset_time.strftime('%-I:%M %p')}",
+        f"You're back! Let's go build something great. (Reset at {reset_time.strftime('%-I:%M %p')})",
     )
 
     cleanup()
