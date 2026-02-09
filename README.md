@@ -1,15 +1,17 @@
 # Claude Limit Notif Scheduler
 
-A lightweight macOS background service that sends notifications when your Claude Pro/Team session limit resets. Notifications are sent to both macOS (native) and iPhone (via [ntfy](https://ntfy.sh)).
+A lightweight notification tool that automatically starts a 5-hour countdown when you send your first message in Claude Code, and notifies you when your session limit resets. Notifications are sent to both macOS (native) and iPhone (via [ntfy](https://ntfy.sh)).
 
 ## How It Works
 
-Claude session limits reset every **5 hours** on a rolling schedule. The scheduler calculates the next reset time and sends a notification **1 minute before** each reset.
+Claude session limits reset **5 hours after your first message**. This tool uses a [Claude Code hook](https://docs.anthropic.com/en/docs/claude-code/hooks) to detect when you send a message, starts a background timer, and sends notifications when your limit is about to reset.
 
-```
-Reset schedule (example starting Feb 7):
-11:00 AM → 4:00 PM → 9:00 PM → 2:00 AM → 7:00 AM → 12:00 PM → ...
-```
+1. You send a message in Claude Code
+2. The `UserPromptSubmit` hook fires and starts a background 5-hour timer
+3. Subsequent messages are ignored (timer already running)
+4. 1 minute before reset: heads-up notification
+5. At reset: final notification
+6. Timer cleans up — next session starts a fresh timer
 
 ### Notification Channels
 
@@ -17,18 +19,15 @@ Reset schedule (example starting Feb 7):
 |---------|-----|
 | **macOS** | Native `osascript` notification with sound |
 | **iPhone** | Push via [ntfy.sh](https://ntfy.sh) — install the ntfy app and subscribe to the topic |
-| **Cloud** | GitHub Actions cron — sends ntfy notifications even when your Mac is off |
 
 ## Setup
 
 ### 1. Configure
 
-Edit `scheduler.py` to set your schedule:
+Edit `notify.py` to set your ntfy topic:
 
 ```python
-EPOCH = datetime.datetime(2026, 2, 7, 11, 0, 0)  # your first reset time
-INTERVAL = datetime.timedelta(hours=5)              # reset interval
-NTFY_TOPIC = "revinobakmaldi-claude-limit"          # your ntfy topic
+NTFY_TOPIC = "revinobakmaldi-claude-limit"  # your ntfy topic
 ```
 
 ### 2. iPhone Notifications
@@ -42,23 +41,17 @@ NTFY_TOPIC = "revinobakmaldi-claude-limit"          # your ntfy topic
 ./install.sh
 ```
 
-This copies the launchd plist to `~/Library/LaunchAgents/` and starts the service. It will auto-start on login and restart if killed.
+This adds a `UserPromptSubmit` hook to your Claude Code settings (`~/.claude/settings.json`). The timer starts automatically on your next Claude Code session.
 
 ### 4. Verify
 
 ```bash
-# Check service is running
-launchctl list | grep limit-notif
+# Check if a timer is running
+cat ~/.local/state/claude-limit-notif/timer.pid
 
-# Check logs
-cat ~/Library/Logs/limit-notif-scheduler.log
+# Test the hook manually
+./notify_timer.sh
 ```
-
-### 5. Cloud Notifications (optional)
-
-The GitHub Actions workflow (`.github/workflows/notify.yml`) runs every hour and sends ntfy notifications even when your Mac is off. It activates automatically once the repo is pushed to GitHub.
-
-To test it manually: go to the repo **Actions** tab → **Claude Limit Reset Notifier** → **Run workflow**.
 
 ## Uninstall
 
@@ -70,15 +63,14 @@ To test it manually: go to the repo **Actions** tab → **Claude Limit Reset Not
 
 | File | Purpose |
 |------|---------|
-| `scheduler.py` | Main scheduler loop — calculates next reset, sleeps, sends notifications |
-| `com.revinobakmaldi.limit-notif-scheduler.plist` | launchd service definition |
-| `install.sh` | One-command install |
-| `uninstall.sh` | One-command uninstall |
-| `cloud_notify.py` | GitHub Actions script — sends ntfy when Mac is off |
-| `.github/workflows/notify.yml` | Hourly cron workflow |
+| `notify_timer.sh` | Hook script — checks for existing timer, starts one if needed |
+| `notify.py` | Timer script — sleeps for 5 hours, sends notifications |
+| `install.sh` | Adds the hook to Claude Code settings |
+| `uninstall.sh` | Removes hook, kills timer, cleans up |
 
 ## Requirements
 
 - macOS
 - Python 3 (pre-installed on macOS)
+- Claude Code
 - No pip dependencies — stdlib only

@@ -1,32 +1,55 @@
 #!/bin/bash
 set -euo pipefail
 
-PLIST_NAME="com.revinobakmaldi.limit-notif-scheduler.plist"
-SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
-DEST="$HOME/Library/LaunchAgents/$PLIST_NAME"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SETTINGS_FILE="$HOME/.claude/settings.json"
+HOOK_CMD="$SCRIPT_DIR/notify_timer.sh"
 
-echo "Installing limit-notif-scheduler..."
+echo "Installing Claude limit notification hook..."
 
-# Unload first if already loaded
-if launchctl list | grep -q "com.revinobakmaldi.limit-notif-scheduler"; then
-    echo "Unloading existing service..."
-    launchctl unload "$DEST" 2>/dev/null || true
+# Ensure settings file exists
+mkdir -p "$(dirname "$SETTINGS_FILE")"
+if [ ! -f "$SETTINGS_FILE" ]; then
+    echo '{}' > "$SETTINGS_FILE"
 fi
 
-# Copy plist
-cp "$SRC_DIR/$PLIST_NAME" "$DEST"
-echo "Copied plist to $DEST"
+# Add hook to Claude Code settings using python (stdlib only)
+python3 -c "
+import json, sys
 
-# Load service
-launchctl load "$DEST"
-echo "Service loaded."
+settings_file = '$SETTINGS_FILE'
+hook_cmd = '$HOOK_CMD'
 
-# Verify
-if launchctl list | grep -q "com.revinobakmaldi.limit-notif-scheduler"; then
-    echo "Service is running."
-else
-    echo "WARNING: Service does not appear in launchctl list."
-    exit 1
-fi
+with open(settings_file) as f:
+    settings = json.load(f)
 
-echo "Done. Logs at ~/Library/Logs/limit-notif-scheduler.log"
+hook_entry = {
+    'hooks': [{'type': 'command', 'command': hook_cmd}]
+}
+
+if 'hooks' not in settings:
+    settings['hooks'] = {}
+
+hooks = settings['hooks']
+if 'UserPromptSubmit' not in hooks:
+    hooks['UserPromptSubmit'] = []
+
+# Check if hook already installed
+for entry in hooks['UserPromptSubmit']:
+    for h in entry.get('hooks', []):
+        if h.get('command') == hook_cmd:
+            print('Hook already installed.')
+            sys.exit(0)
+
+hooks['UserPromptSubmit'].append(hook_entry)
+
+with open(settings_file, 'w') as f:
+    json.dump(settings, f, indent=2)
+
+print('Hook added to Claude Code settings.')
+"
+
+# Create state directory
+mkdir -p "$HOME/.local/state/claude-limit-notif"
+
+echo "Done. The notification timer will start automatically when you send your first message in Claude Code."
