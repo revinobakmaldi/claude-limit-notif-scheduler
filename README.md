@@ -53,6 +53,17 @@ cat ~/.local/state/claude-limit-notif/timer.pid
 ./notify_timer.sh
 ```
 
+## Manual Timer
+
+If you already know the remaining time (e.g. from `/usage` in Claude Code), you can start a timer manually:
+
+```bash
+# Start a timer with custom minutes (e.g. 3h48m = 228 minutes)
+python3 notify.py 228
+```
+
+This is useful for sessions already in progress.
+
 ## Uninstall
 
 ```bash
